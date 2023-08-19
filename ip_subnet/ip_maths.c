@@ -7,6 +7,7 @@
 // #define DEBUG
 
 void get_broadcast_address(const char *, char, char *);
+void get_ip_integral_equivalent2(const char *);
 void print_ip_bits(const char*);
 unsigned int get_ip_integral_equivalent(char*);
 
@@ -18,7 +19,8 @@ int main(void) {
 	/* get_broadcast_address(ip_addr, mask, ipaddr_buffer);
 	printf("Broadcast addr = %s\n", ipaddr_buffer); */
 
-	printf("ip integral equivalent: %u\n", get_ip_integral_equivalent(ip_addr));
+	// printf("ip integral equivalent: %u\n", get_ip_integral_equivalent(ip_addr));
+	get_ip_integral_equivalent2(ip_addr);
 
 	return 0;
 }
@@ -71,6 +73,29 @@ void get_broadcast_address(const char *ip_addr, char mask, char *ipaddr_buffer) 
 			num = 0;
 		} else num <<= 1;  // shift only 7 times, not 8
 	}
+}
+
+// use "unsigned int" as it doesn't have signed bit, so it can work for full 32 bit of ipv4 address
+void get_ip_integral_equivalent2(const char *ip_addr) {
+	char *temp_addr = (char *)malloc(PREFIX_LEN);
+	strncpy(temp_addr, ip_addr, PREFIX_LEN);
+	printf("temp_addr: %s\n", temp_addr);
+	char *quad = strtok(temp_addr, ".");
+	int counter = 0;
+	unsigned int ip = 0;
+	while (quad != NULL) {
+		int q = atoi(quad);
+		int k = 7;
+		while (k >= 0) {
+			ip |= q & (1 << k--);  // check the kth bit and set it in ip
+		}
+		quad = strtok(NULL, ".");
+		if (quad != NULL) {
+			ip <<= 8;  // get 8 zeroes on right side
+		}
+	}
+
+	printf("ip: %u\n", ip);
 }
 
 unsigned int get_ip_integral_equivalent(char *ip_addr) {
