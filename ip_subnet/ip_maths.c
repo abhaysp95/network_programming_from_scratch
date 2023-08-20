@@ -7,20 +7,30 @@
 // #define DEBUG
 
 void get_broadcast_address(const char *, char, char *);
-void get_ip_integral_equivalent2(const char *);
+void get_broadcast_address2(const char *, const char, char *);
+unsigned int get_ip_integral_equivalent2(const char *);
 void print_ip_bits(const char*);
 unsigned int get_ip_integral_equivalent(char*);
 
-int main(void) {
+int main(int argc, char **argv) {
 	char ipaddr_buffer[PREFIX_LEN];
 	memset(ipaddr_buffer, '\0', PREFIX_LEN);
 	char *ip_addr = "192.168.2.1";
 	char mask = 20;
+
+	/* if (argc != 2) {
+		fprintf(stderr, "usage: ./a.out [1|2] [[ipv4 mask]|[ipv4]]");
+		exit(1);
+	} */
+
 	/* get_broadcast_address(ip_addr, mask, ipaddr_buffer);
 	printf("Broadcast addr = %s\n", ipaddr_buffer); */
 
 	// printf("ip integral equivalent: %u\n", get_ip_integral_equivalent(ip_addr));
-	get_ip_integral_equivalent2(ip_addr);
+	// get_ip_integral_equivalent2(ip_addr);
+
+	get_broadcast_address2(ip_addr, mask, ipaddr_buffer);
+	printf("Broadcast addr = %s\n", ipaddr_buffer);
 
 	return 0;
 }
@@ -75,11 +85,29 @@ void get_broadcast_address(const char *ip_addr, char mask, char *ipaddr_buffer) 
 	}
 }
 
+void get_broadcast_address2(const char *ip_addr, const char mask, char *ipaddr_buffer) {
+	unsigned int ip = get_ip_integral_equivalent2(ip_addr);
+
+	for (int i = 0; i < 32 - mask; i++) {
+		ip |= 1 << i;
+	}
+
+	int num = 0, clen = 0, counter = 0;
+	for (unsigned int i = 32; i > 0; i--) {
+		int k =  (ip & (1 << (i - 1))) ? 1 : 0;
+		num |= k;
+		if ((i - 1) % 8 == 0) {
+			clen += sprintf(ipaddr_buffer + clen, "%d", num);
+			if (counter++ < 3) ipaddr_buffer[clen++] = '.';
+			num = 0;
+		} else num <<= 1;
+	}
+}
+
 // use "unsigned int" as it doesn't have signed bit, so it can work for full 32 bit of ipv4 address
-void get_ip_integral_equivalent2(const char *ip_addr) {
+unsigned int get_ip_integral_equivalent2(const char *ip_addr) {
 	char *temp_addr = (char *)malloc(PREFIX_LEN);
 	strncpy(temp_addr, ip_addr, PREFIX_LEN);
-	printf("temp_addr: %s\n", temp_addr);
 	char *quad = strtok(temp_addr, ".");
 	int counter = 0;
 	unsigned int ip = 0;
@@ -95,7 +123,7 @@ void get_ip_integral_equivalent2(const char *ip_addr) {
 		}
 	}
 
-	printf("ip: %u\n", ip);
+	return ip;
 }
 
 unsigned int get_ip_integral_equivalent(char *ip_addr) {
