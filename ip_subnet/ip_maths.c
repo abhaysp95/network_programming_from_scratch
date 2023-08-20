@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <getopt.h>
+#include <sys/types.h>
 
 #define PREFIX_LEN 16
 
@@ -12,25 +14,41 @@ unsigned int get_ip_integral_equivalent2(const char *);
 void print_ip_bits(const char*);
 unsigned int get_ip_integral_equivalent(char*);
 
+void print_usage_err() {
+	fprintf(stderr, "usage: a.out [a|b] [[ipv4]|[ipv4 mask]]\n");
+	exit(1);
+}
+
 int main(int argc, char **argv) {
-	char ipaddr_buffer[PREFIX_LEN];
-	memset(ipaddr_buffer, '\0', PREFIX_LEN);
-	char *ip_addr = "192.168.2.1";
-	char mask = 20;
+	if (argc < 2) {
+		print_usage_err();
+	}
 
-	/* if (argc != 2) {
-		fprintf(stderr, "usage: ./a.out [1|2] [[ipv4 mask]|[ipv4]]");
-		exit(1);
-	} */
-
-	/* get_broadcast_address(ip_addr, mask, ipaddr_buffer);
-	printf("Broadcast addr = %s\n", ipaddr_buffer); */
-
-	// printf("ip integral equivalent: %u\n", get_ip_integral_equivalent(ip_addr));
-	// get_ip_integral_equivalent2(ip_addr);
-
-	get_broadcast_address2(ip_addr, mask, ipaddr_buffer);
-	printf("Broadcast addr = %s\n", ipaddr_buffer);
+	int option = -1;
+	u_int8_t aflag = 0, bflag = 0;
+	while ((option = getopt(argc, argv, "+a:b:")) != -1) {
+		switch (option) {
+			case 'a':
+				if (aflag) {
+					print_usage_err();
+				}
+				aflag = 1, bflag = 1;
+				printf("%u\n", get_ip_integral_equivalent2(argv[optind - 1]));
+				break;
+			case 'b':
+				if (bflag) {
+					print_usage_err();
+				}
+				aflag = 1, bflag = 1;
+				char ipaddr_buffer[PREFIX_LEN];
+				memset(ipaddr_buffer, '\0', PREFIX_LEN);
+				get_broadcast_address2(argv[optind - 1], (char)strtol(argv[optind], NULL, 10), ipaddr_buffer);
+				printf("%s\n", ipaddr_buffer);
+				break;
+			default:
+				print_usage_err();
+		}
+	}
 
 	return 0;
 }
